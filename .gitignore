@@ -16,6 +16,10 @@ broadcast/
 lcov.info
 gas-report.txt
 
+# Kept local on purpose. The write-up is not for the public repo.
+README.md
+PHASE2-HANDOVER.md
+
 # Editor / OS
 .DS_Store
 *.swp
