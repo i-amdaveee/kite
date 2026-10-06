@@ -10,7 +10,7 @@ import {PublicAgentBudget} from "../src/public-agent-budget.sol";
 ///
 ///        forge script script/DeployMainnet.s.sol:DeployMainnet \
 ///          --rpc-url $ARC_MAINNET_RPC_URL \
-///          --keystore deployer \
+///          --keystore ~/.foundry/keystores/mainnet \
 ///          --broadcast \
 ///          --confirm-mainnet
 ///
@@ -35,6 +35,13 @@ contract DeployMainnet is Script {
     /// @dev Arc enforces a 20 Gwei floor on maxFeePerGas.
     uint256 internal constant MAX_FEE_PER_GAS = 25 gwei;
 
+    /// @dev The keystore account that must sign this deploy. Asserted against the
+    ///      on-chain `owner()` rather than read from `msg.sender`: inside a broadcast
+    ///      the script's own `msg.sender` is the default foundry sender
+    ///      (0x1804c8AB...), not the signer, so forge rejects scripts that use it.
+    ///      Set this alongside AGENT and SELLER when the mainnet deploy is enabled.
+    address internal constant DEPLOYER = address(0);
+
     address internal constant AGENT = address(0);
     address internal constant SELLER = address(0);
 
@@ -58,12 +65,12 @@ contract DeployMainnet is Script {
         // Configuration is deliberately unset. Mainnet deploy is out of scope for
         // Phase 2 and must be set deliberately at the time it is used.
         require(AGENT != address(0) && SELLER != address(0), "agent/seller not set");
+        require(DEPLOYER != address(0), "deployer not set");
 
         vm.startBroadcast();
-        address deployer = msg.sender;
 
         PublicAgentBudget budget = new PublicAgentBudget();
-        require(budget.owner() == deployer, "owner should be the deployer");
+        require(budget.owner() == DEPLOYER, "owner should be the deployer");
 
         budget.setAgent(AGENT);
         budget.setAllowlist(SELLER, true);

@@ -19,6 +19,12 @@ contract DeployTestnet is Script {
     ///      (eth_chainId returned 0x4cef52) and in docs.arc.io.
     uint256 internal constant ARC_TESTNET_CHAIN_ID = 5042002;
 
+    /// @dev The keystore account that must sign this deploy. Asserted against the
+    ///      on-chain `owner()` rather than read from `msg.sender`: inside a broadcast
+    ///      the script's own `msg.sender` is the default foundry sender
+    ///      (0x1804c8AB...), not the signer, so forge rejects scripts that use it.
+    address internal constant DEPLOYER = 0xeF09C1330687CE217Da48876de776a562bFF15c8;
+
     address internal constant AGENT = 0xAb4F16BB27Ffa7FAf5c68DFAB3881883DB1ba984;
     address internal constant SELLER = 0x6c652c3E0174FBb383b5853388d1490A2da6Df23;
 
@@ -35,14 +41,12 @@ contract DeployTestnet is Script {
 
         require(AGENT != address(0) && SELLER != address(0), "agent/seller not set");
 
-        // No private key is read here. `forge script --keystore deployer --broadcast`
+        // No private key is read here. `forge script --keystore <path> --broadcast`
         // signs with the encrypted keystore, so the key never touches this repo.
         vm.startBroadcast();
-        // Reads the account at broadcast time, before the constructor call.
-        address deployer = msg.sender;
 
         PublicAgentBudget budget = new PublicAgentBudget();
-        require(budget.owner() == deployer, "owner should be the deployer");
+        require(budget.owner() == DEPLOYER, "owner should be the deployer");
 
         // Rules first, then money.
         budget.setAgent(AGENT);
